@@ -1,0 +1,8 @@
+####### STREAM LEVEL 1 ########
+ mae: 7.0030 mse: 480.3941 mre: 0.1064 mape: 0.0995 nse: 0.9032 kge: -0.0502
+####### STREAM LEVEL 2 ########
+ mae: 5.2755 mse: 633.0922 mre: 0.0857 mape: 0.0654 nse: 0.9123 kge: 0.7526
+####### STREAM LEVEL 3 ########
+ mae: 9.1239 mse: 3399.4615 mre: 0.1957 mape: 0.1259 nse: 0.8707 kge: 0.8958
+####### STREAM LEVEL 4 ########
+ mae: 1.9369 mse: 120.5796 mre: 0.0879 mape: 0.1306 nse: 0.8273 kge: 0.9154

@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-
+import numpy as np
 from . import Filler
 from ..nn.models import MPGRUNet, GRINet, BiMPGRUNet, GRINODENet
 from ..DA.loss import SupConLoss, ConditionalEntropyLoss, NTXentLoss
@@ -127,7 +127,10 @@ class GraphFiller(Filler):
         batch_data['mask'] = torch.bernoulli(mask.clone().detach().float() * self.keep_prob).byte()
         eval_mask = batch_data.pop('eval_mask', None)
         eval_mask = (mask | eval_mask) - batch_data['mask']  # all unseen data
-
+        
+        log_transformed_tensor = torch.where(batch_data['x'] != 0, torch.log(batch_data['x']), batch_data['x'])
+        batch_data['x'] = log_transformed_tensor
+      
         y = batch_data.pop('y')
 
         # Compute masks
@@ -230,10 +233,10 @@ class GraphFiller(Filler):
             # target_ntx = ntx.forward(imputation_repr_t.view(32,-1), imputation_repr_t_mix.view(32,-1))
             source_ntx = ntx.forward(encode_s.view(32,-1), encode_s_mix.view(32,-1))
             target_ntx = ntx.forward(encode_t.view(32,-1), encode_t_mix.view(32,-1))
-            da_loss = (target_ntx + source_ntx)*self.aux_weight
+            # da_loss = (target_ntx + source_ntx)*self.aux_weight
    
-            # da_loss = target_ntx
-            # da_loss = source_ntx
+            da_loss = target_ntx
+            da_loss += source_ntx
             # da_loss += Coral(imputation_repr_s,imputation_repr_t)
             # da_loss += Coral(imputation_repr_s_mix, imputation_repr_t)
             

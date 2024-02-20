@@ -28,50 +28,30 @@ from pytorch_lightning.utilities import CombinedLoader
 def has_graph_support(model_cls):
     return model_cls in [models.GRINet, models.MPGRUNet, models.BiMPGRUNet, models.GRINODENet]
 
-
 def get_model_classes(model_str):
     if model_str == 'brits':
         model, filler = models.BRITSNet, fillers.BRITSFiller
     elif model_str == 'grin':
         model, filler = models.GRINet, fillers.GraphFiller
-    elif model_str == 'mpgru':
-        model, filler = models.MPGRUNet, fillers.GraphFiller
-    elif model_str == 'bimpgru':
-        model, filler = models.BiMPGRUNet, fillers.GraphFiller
-    elif model_str == 'var':
-        model, filler = models.VARImputer, fillers.Filler
-    elif model_str == 'gain':
-        model, filler = models.RGAINNet, fillers.RGAINFiller
-    elif model_str == 'birnn':
-        model, filler = models.BiRNNImputer, fillers.MultiImputationFiller
-    elif model_str == 'rnn':
-        model, filler = models.RNNImputer, fillers.Filler
-    elif model_str == "grin_node":
-        model, filler = model, filler = models.GRINODENet, fillers.GraphFiller
     else:
         raise ValueError(f'Model {model_str} not available.')
     return model, filler
 
 
-def get_dataset(dataset_name):
+def get_dataset(dataset_name, fixed_mask):
+    # print(dataset_name)
+    # exit()
     if dataset_name[:3] == 'air':
-        dataset = datasets.AirQuality(impute_nans=True, small=dataset_name[3:] == '36')
-    elif dataset_name == 'bay_block':
-        dataset = datasets.MissingValuesPemsBay()
-    elif dataset_name == 'la_block':
-        dataset = datasets.MissingValuesMetrLA()
-    elif dataset_name == 'discharge_block':
-        dataset = datasets.MissingValuesDischarge()
-        target_dataset = datasets.MissingValuesTarget()
-    elif dataset_name == 'la_point':
-        dataset = datasets.MissingValuesMetrLA(p_fault=0., p_noise=0.25)
-    elif dataset_name == 'bay_point':
-        dataset = datasets.MissingValuesPemsBay(p_fault=0., p_noise=0.25)
+        dataset = datasets.MissingAirSource(p_fault=0., p_noise=0.15, fixed_mask=fixed_mask)
+        target_dataset = datasets.MissingAirTarget(p_fault=0., p_noise=0.15, fixed_mask=fixed_mask)
     elif dataset_name == 'discharge_point':
         # dataset = datasets.MissingValuesDischarge(p_fault=0.0015, p_noise=0.25)
         # target_dataset = datasets.MissingValuesTarget(p_fault=0.0015, p_noise=0.25)
-        dataset = datasets.MissingValuesDischarge(p_fault=0., p_noise=0.15)
-        target_dataset = datasets.MissingValuesTarget(p_fault=0., p_noise=0.25)
+        dataset = datasets.MissingValuesDischarge(p_fault=0., p_noise=0.25, fixed_mask=fixed_mask)
+        target_dataset = datasets.MissingValuesTarget(p_fault=0., p_noise=0.25, fixed_mask=fixed_mask)
+    elif dataset_name == 'pems':
+        dataset = datasets.MissingValuesPems07(p_fault=0., p_noise=0.25, fixed_mask=fixed_mask)
+        target_dataset = datasets.MissingValuesPems04(p_fault=0., p_noise=0.25, fixed_mask=fixed_mask)
     else:
         raise ValueError(f"Dataset {dataset_name} not available in this setting.")
     return dataset,target_dataset
@@ -82,7 +62,7 @@ def parse_args():
     parser = ArgumentParser()
     parser.add_argument('--seed', type=int, default=-1)
     parser.add_argument("--model-name", type=str, default='grin')
-    parser.add_argument("--dataset-name", type=str, default='air36')
+    parser.add_argument("--dataset-name", type=str, default='air')
     parser.add_argument("--config", type=str, default=None)
     # Splitting/aggregation params
     parser.add_argument('--in-sample', type=str_to_bool, nargs='?', const=True, default=False)
@@ -111,12 +91,11 @@ def parse_args():
     parser.add_argument('--g-train-freq', type=int, default=1)
     parser.add_argument('--d-train-freq', type=int, default=5)
     # DA-method
-    parser.add_argument('--da_method', type=str, default='None')
+    parser.add_argument('--da_method', type=str, default='None')  ### 'cotmix', 'coral', 'mmd'
     parser.add_argument('--temporal_shift', type=int, default=32)
     parser.add_argument('--mix_ratio', type=float, default=0.85)
     parser.add_argument('--aux_weight', type=float, default=1)
-
-
+    parser.add_argument('--fixed_mask', type=bool, default=False)
 
     #### graph_constructor ### 
     parser.add_argument('--buildA_true', type=bool, default=True, help='whether to construct adaptive adjacency matrix')
@@ -137,9 +116,7 @@ def parse_args():
         for arg in config_args:
             setattr(args, arg, config_args[arg])
 
-     
     return args
-
 
 def run_experiment(args):
     # Set configuration and seed
@@ -149,8 +126,9 @@ def run_experiment(args):
     torch.set_num_threads(1)
     pl.seed_everything(args.seed)
 
+    fixed_mask = args.fixed_mask
     model_cls, filler_cls = get_model_classes(args.model_name)
-    dataset,target_dataset = get_dataset(args.dataset_name)
+    dataset,target_dataset = get_dataset(args.dataset_name, fixed_mask=fixed_mask)
     da_method = args.da_method
     
     ########################################
@@ -161,6 +139,7 @@ def run_experiment(args):
     logdir = os.path.join(config['logs'], args.dataset_name, args.model_name, exp_name)
     # save config for logging
     pathlib.Path(logdir).mkdir(parents=True)
+
     with open(os.path.join(logdir, 'config.yaml'), 'w') as fp:
         yaml.dump(parser_utils.config_dict_from_args(args), fp, indent=4, sort_keys=True)
 
@@ -186,7 +165,6 @@ def run_experiment(args):
     # get train/val/test indices
     split_conf = parser_utils.filter_function_args(args, dataset.splitter, return_dict=True)
     train_idxs, val_idxs, test_idxs = dataset.splitter(torch_target_dataset, **split_conf)
-
 
     #### target dataset split ### 
     #split_conf = parser_utils.filter_function_args(args, target_dataset.splitter, return_dict=True)
@@ -336,9 +314,9 @@ def run_experiment(args):
     mask = pd.DataFrame(eval_mask)
     #data_pre = (df_hat-1) * 3759.35 + 1237.58
     data_pre = df_hat
-    data_pre.to_csv('%s_pre.csv'%(args.model_name),header=None)
-    df_true_raw.to_csv('true.csv',header=None)
-    mask.to_csv('%s_mask.csv'%(args.model_name),header=None,index = None)
+    # data_pre.to_csv('%s_pre.csv'%(args.model_name),header=None)
+    # df_true_raw.to_csv('true.csv',header=None)
+    # mask.to_csv('%s_mask.csv'%(args.model_name),header=None,index = None)
     # print(y_true.shape)
     return df_hats, df_true, eval_mask
 

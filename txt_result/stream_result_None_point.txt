@@ -1,0 +1,32 @@
+####### STREAM LEVEL 1 ########
+ mae: 7.3908 mse: 540.9179 mre: 0.1123 mape: 0.0981 nse: 0.8840 kge: 0.1648
+####### STREAM LEVEL 2 ########
+ mae: 6.5492 mse: 716.6435 mre: 0.1064 mape: 0.0986 nse: 0.8892 kge: 0.7306
+####### STREAM LEVEL 3 ########
+ mae: 12.0633 mse: 3863.8262 mre: 0.2587 mape: 0.1802 nse: 0.8558 kge: 0.9060
+####### STREAM LEVEL 4 ########
+ mae: 1.5361 mse: 35.3988 mre: 0.0697 mape: 0.1517 nse: 0.8489 kge: 0.8989
+####### STREAM LEVEL 1 ########
+ mae: 11.0255 mse: 804.4772 mre: 0.1675 mape: 0.1915 nse: 0.8189 kge: -0.5897
+####### STREAM LEVEL 2 ########
+ mae: 9.8959 mse: 1161.4321 mre: 0.1608 mape: 0.2133 nse: 0.7775 kge: 0.2402
+####### STREAM LEVEL 3 ########
+ mae: 15.2800 mse: 4755.5903 mre: 0.3277 mape: 0.2543 nse: 0.8021 kge: 0.6125
+####### STREAM LEVEL 4 ########
+ mae: 2.3170 mse: 45.1062 mre: 0.1052 mape: 0.4084 nse: 0.8016 kge: 0.9093
+####### STREAM LEVEL 1 ########
+ mae: 7.3042 mse: 431.5782 mre: 0.1110 mape: 0.1048 nse: 0.8856 kge: 0.3862
+####### STREAM LEVEL 2 ########
+ mae: 6.8321 mse: 657.4517 mre: 0.1110 mape: 0.1293 nse: 0.8700 kge: 0.6199
+####### STREAM LEVEL 3 ########
+ mae: 13.2166 mse: 3840.0690 mre: 0.2834 mape: 0.2291 nse: 0.8491 kge: 0.8860
+####### STREAM LEVEL 4 ########
+ mae: 1.7178 mse: 43.1874 mre: 0.0780 mape: 0.1589 nse: 0.8498 kge: 0.9163
+####### STREAM LEVEL 1 ########
+ mae: 10.7681 mse: 882.3935 mre: 0.1636 mape: 0.1645 nse: 0.8241 kge: -0.6844
+####### STREAM LEVEL 2 ########
+ mae: 9.4884 mse: 1190.2346 mre: 0.1542 mape: 0.1849 nse: 0.7998 kge: 0.0613
+####### STREAM LEVEL 3 ########
+ mae: 14.9810 mse: 4803.7740 mre: 0.3213 mape: 0.2235 nse: 0.8023 kge: 0.7301
+####### STREAM LEVEL 4 ########
+ mae: 1.8923 mse: 32.5458 mre: 0.0859 mape: 0.3451 nse: 0.8043 kge: 0.9084

@@ -16,6 +16,7 @@ class ImputationDataset(TemporalDataset):
                  window=24,
                  stride=1,
                  exogenous=None):
+      
         if mask is None:
             mask = np.ones_like(data)
         if exogenous is None:

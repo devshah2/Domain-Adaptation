@@ -88,6 +88,7 @@ class GRIL(nn.Module):
         self.dropout = nn.Dropout(dropout) if dropout > 0. else None
 
         # Fist stage readout
+        
         self.first_stage = nn.Conv1d(in_channels=self.hidden_size, out_channels=self.input_size, kernel_size=1)
 
         # Spatial decoder (rnn_input_size + hidden_size -> hidden_size)
@@ -146,12 +147,16 @@ class GRIL(nn.Module):
         for step in range(steps):
             x_s = x[..., step]
             m_s = mask[..., step]
+            
             h_s = h[-1]
             u_s = u[..., step] if u is not None else None
             # firstly impute missing values with predictions from state
             xs_hat_1 = self.first_stage(h_s)
 
             # fill missing values in input with prediction
+            # print(xs_hat_1.shape)
+            # print(m_s.shape)
+            # exit()
             x_s = torch.where(m_s, x_s, xs_hat_1)
             # prepare inputs
             # retrieve maximum information from neighbors

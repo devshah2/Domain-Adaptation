@@ -2,7 +2,7 @@ import pytorch_lightning as pl
 from torch.utils.data import DataLoader, Subset, RandomSampler
 
 from .. import TemporalDataset, SpatioTemporalDataset
-from ..preprocessing import StandardScaler, MinMaxScaler
+from ..preprocessing import StandardScaler, MinMaxScaler, LogScaler
 from ...utils import ensure_list
 from ...utils.parser_utils import str_to_bool
 
@@ -11,9 +11,8 @@ class SpatioTemporalDataModule(pl.LightningDataModule):
     """
     Pytorch Lightning DataModule for TimeSeriesDatasets
     """
-
     def __init__(self, dataset: TemporalDataset,target_dataset: TemporalDataset,
-                 scale=True,
+                 scale=False,
                  scaling_axis='samples',
                  scaling_type='std',
                  scale_exogenous=None,
@@ -39,7 +38,9 @@ class SpatioTemporalDataModule(pl.LightningDataModule):
 
 
         # preprocessing
-        self.scale = scale
+        # self.scale = scale
+        self.scale = False
+ 
         self.scaling_type = scaling_type
         self.scaling_axis = scaling_axis
         self.scale_exogenous = ensure_list(scale_exogenous) if scale_exogenous is not None else None
@@ -47,6 +48,7 @@ class SpatioTemporalDataModule(pl.LightningDataModule):
         self.batch_size = batch_size
         self.workers = workers
         self.samples_per_epoch = samples_per_epoch
+
 
     @property
     def is_spatial(self):
@@ -104,6 +106,8 @@ class SpatioTemporalDataModule(pl.LightningDataModule):
             return StandardScaler
         elif self.scaling_type == 'minmax':
             return MinMaxScaler
+        elif self.scaling_type == 'log':
+            return LogScaler
         else:
             return NotImplementedError
 
@@ -114,6 +118,7 @@ class SpatioTemporalDataModule(pl.LightningDataModule):
             train = self.torch_dataset.data.numpy()[self.train_slice]
             train_mask = self.torch_dataset.mask.numpy()[self.train_slice] if 'mask' in self.torch_dataset else None
             scaler = self.get_scaler()(scaling_axis).fit(train, mask=train_mask, keepdims=True).to_torch()
+
             self.torch_dataset.scaler = scaler
 
             if self.scale_exogenous is not None:

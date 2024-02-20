@@ -71,6 +71,7 @@ def sample_mask(data,p=0.02):
 
     # mask = mask | (rand(mask.shape) < p_noise)
 
+
     return mask.astype('uint8')
 
 

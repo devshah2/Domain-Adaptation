@@ -81,6 +81,20 @@ class StandardScaler(Scaler):
             self.bias = x.mean(axis=self.axis, keepdims=keepdims)
             self.scale = x.std(axis=self.axis, keepdims=keepdims)
         return self
+    
+class LogScaler(Scaler):
+    def __init__(self, axis=0):
+        self.axis = axis
+        super(LogScaler, self).__init__()
+
+    def fit(self, x, mask=None, keepdims=True):
+        if mask is not None:
+            x = np.where(mask, x, np.nan)
+            self.transformed_data = np.log(x)
+        
+        return self
+
+
 
 
 class MinMaxScaler(Scaler):

@@ -11,7 +11,8 @@ from ..utils import sample_mask, sample_mask_block
 
 class Discharge(PandasDataset):
     def __init__(self):
-        df,  mask,df_raw = self.load()
+        df, mask,df_raw = self.load()
+
         #self.dist = dist
         super().__init__(dataframe=df, u=None, mask=mask, name='discharge', freq='1D', aggr='nearest')
         self.df_raw = df_raw
@@ -26,14 +27,8 @@ class Discharge(PandasDataset):
         df = df.reindex(index=date_range) 
 
         #### log transformation #####
-        #df = df.transform(lambda x: np.log(x+1))
-        #df.replace(-np.inf,np.nan,inplace=True)
         df = df.loc['2015/4/15':'2021/9/9',:]
         df_raw = df
-
-        #df_target = df_target.loc['2021/1/4':'2021/9/8',:]
-        #df = df.loc['2021/1/4':'2021/9/8',:]
-        #df = pd.concat([df,df_target],axis=1)
         mask = ~np.isnan(df.values)
         df.fillna(method='ffill', axis=0, inplace=True)
         #print(mask.shape)
@@ -42,9 +37,6 @@ class Discharge(PandasDataset):
         return df.astype('float32'),  mask.astype('uint8'), df_raw.astype('float32')
 
     def get_similarity(self, thr=0.1, force_symmetric=False, sparse=False):
-        #path = os.path.join(datasets_path['discharge'], 'SSC_sites_flow_direction.csv')
-        #adj = np.array(pd.read_csv(r'C:\Users\89457\Desktop\optimizaiton\Spatial-Temporal\spatial-temporal\grin-main\datasets/discharge\SSC_sites_flow_direction.csv',index_col=0).values)
-        #adj = np.ones((40,40))
         adj = np.array(pd.read_csv('./datasets/discharge/SSC_sites_flow_direction.csv',index_col=0).values)
         if force_symmetric:
             adj = np.maximum.reduce([adj, adj.T])
@@ -61,12 +53,13 @@ class Discharge(PandasDataset):
 
 class MissingValuesDischarge(Discharge):
     SEED = 56789
-    def __init__(self, p_fault=0.0015, p_noise=0.05):
+    def __init__(self, p_fault=0.0015, p_noise=0.05, fixed_mask=False):
         super(MissingValuesDischarge, self).__init__()
         self.rng = np.random.default_rng(self.SEED)
         self.p_fault = p_fault
         self.p_noise = p_noise
-
+        self.fixed_mask = fixed_mask
+        
         eval_mask = sample_mask(self.mask[0:2110,:], p=self.p_noise)
         eval_mask_block = sample_mask_block(self.mask[-230:,:].shape,
                                 self.p_fault,
@@ -74,14 +67,18 @@ class MissingValuesDischarge(Discharge):
                                 min_seq=5,
                                 max_seq=15,
                                 rng=self.rng)
-        self.eval_mask = np.concatenate((eval_mask,eval_mask_block),axis=0)
+        if self.fixed_mask == False:
+            self.eval_mask = np.concatenate((eval_mask,eval_mask_block),axis=0)
+        else:
+            self.eval_mask = np.load('./datasets/discharge/discharge_mask.npy')
+        
         # self.eval_mask = eval_mask
       
     @property
     def training_mask(self):
         # print(type(self.mask))
         # print(self.mask.size - np.count_nonzero(self.mask))
-
+        
         return self.mask if self.eval_mask is None else (self.mask & (1 - self.eval_mask))
 
     def splitter(self, dataset, val_len=0, test_len=0, window=0):

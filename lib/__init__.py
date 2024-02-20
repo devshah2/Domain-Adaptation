@@ -7,8 +7,7 @@ config = {
 }
 datasets_path = {
     'air': 'datasets/air_quality',
-    'la': 'datasets/metr_la',
-    'bay': 'datasets/pems_bay',
+    'pems': 'datasets/PEMS',
     'synthetic': 'datasets/synthetic',
     'discharge': 'datesets/discharge'
 }

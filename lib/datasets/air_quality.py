@@ -17,6 +17,7 @@ class AirQuality(PandasDataset):
         self.infer_eval_from = 'next'
         self.eval_mask = None
         df, dist, mask = self.load(impute_nans=impute_nans, small=small, masked_sensors=masked_sensors)
+        print(type(df.index))
         self.dist = dist
         if masked_sensors is None:
             self.masked_sensors = list()
@@ -55,6 +56,7 @@ class AirQuality(PandasDataset):
         # compute distances from latitude and longitude degrees
         st_coord = stations.loc[:, ['latitude', 'longitude']]
         dist = geographical_distance(st_coord, to_rad=True).values
+      
         return df, dist, mask
 
     def splitter(self, dataset, val_len=1., in_sample=False, window=0):
@@ -77,10 +79,13 @@ class AirQuality(PandasDataset):
             # remove overlapping indices from training set
             ovl_idxs, _ = dataset.overlapping_indices(nontest_idxs, val_idxs, synch_mode='horizon', as_mask=True)
             train_idxs = nontest_idxs[~ovl_idxs]
+    
         return [train_idxs, val_idxs, test_idxs]
 
     def get_similarity(self, thr=0.1, include_self=False, force_symmetric=False, sparse=False, **kwargs):
         theta = np.std(self.dist[:36, :36])  # use same theta for both air and air36
+        print(theta)
+        exit()
         adj = thresholded_gaussian_kernel(self.dist, theta=theta, threshold=thr)
         if not include_self:
             adj[np.diag_indices_from(adj)] = 0.

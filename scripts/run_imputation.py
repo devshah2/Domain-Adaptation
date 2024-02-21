@@ -41,6 +41,7 @@ def get_model_classes(model_str):
 def get_dataset(dataset_name, fixed_mask):
     # print(dataset_name)
     # exit()
+
     if dataset_name[:3] == 'air':
         dataset = datasets.MissingAirSource(p_fault=0., p_noise=0.15, fixed_mask=fixed_mask)
         target_dataset = datasets.MissingAirTarget(p_fault=0., p_noise=0.15, fixed_mask=fixed_mask)
@@ -50,7 +51,7 @@ def get_dataset(dataset_name, fixed_mask):
         dataset = datasets.MissingValuesDischarge(p_fault=0., p_noise=0.25, fixed_mask=fixed_mask)
         target_dataset = datasets.MissingValuesTarget(p_fault=0., p_noise=0.25, fixed_mask=fixed_mask)
     elif dataset_name == 'pems':
-        dataset = datasets.MissingValuesPems07(p_fault=0., p_noise=0.25, fixed_mask=fixed_mask)
+        dataset = datasets.MissingValuesPems08(p_fault=0., p_noise=0.25, fixed_mask=fixed_mask)
         target_dataset = datasets.MissingValuesPems04(p_fault=0., p_noise=0.25, fixed_mask=fixed_mask)
     else:
         raise ValueError(f"Dataset {dataset_name} not available in this setting.")
